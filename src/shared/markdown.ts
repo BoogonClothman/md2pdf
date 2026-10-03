@@ -2,7 +2,11 @@
 
 import MarkdownIt from 'markdown-it';
 import hljs from 'highlight.js';
-import { registerMath } from './math';
+// Microsoft-maintained KaTeX plugin (used by VS Code's markdown preview).
+// Unlike waylonflinn/markdown-it-katex (unmaintained, hard-depends katex@0.6
+// whose HTML mismatches katex 0.16 CSS), this one depends on katex ^0.16.4
+// and dedupes to our top-level copy.
+import mathPlugin from '@vscode/markdown-it-katex';
 
 export function escapeHtml(s: string): string {
   return s
@@ -29,7 +33,7 @@ const md: MarkdownIt = new MarkdownIt({
   },
 });
 
-md.use(() => registerMath(md));
+md.use(mathPlugin, { throwOnError: false });
 
 // Render ```mermaid fences as containers that the renderer fills with SVG.
 const defaultFence = md.renderer.rules.fence!.bind(md.renderer.rules);
