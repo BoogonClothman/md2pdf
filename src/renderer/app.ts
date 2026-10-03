@@ -49,6 +49,85 @@ flowchart LR
 > Press **Ctrl+E** (⌘E on macOS) to export.
 `;
 
+// ---- session memory (localStorage) -----------------------------------------
+// Persists draft + last file + export settings across launches. First run
+// (no stored session) falls back to DEFAULT_DOC as an onboarding sample.
+// Restored sessions are treated as clean (savedContent = content): even if
+// the user closes without saving to disk, the draft itself is not lost -
+// it comes back on next launch.
+
+const STORAGE_SESSION = 'md2pdf.session';
+const STORAGE_SETTINGS = 'md2pdf.settings';
+const MAX_PERSIST_CHARS = 4 * 1024 * 1024; // stay well under the ~5MB quota
+
+interface StoredSession {
+  content: string;
+  saved: string;
+  path: string | null;
+}
+interface StoredSettings {
+  pageSize?: string;
+  orientation?: string;
+  marginMm?: number;
+  pageNumbers?: boolean;
+  bookmarks?: boolean;
+}
+
+function readJson<T>(key: string): T | null {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+let persistTimer: ReturnType<typeof setTimeout> | null = null;
+function flushSession(): void {
+  if (editor.value.length > MAX_PERSIST_CHARS) {
+    console.warn('session too large for localStorage; not persisted');
+    return;
+  }
+  try {
+    localStorage.setItem(
+      STORAGE_SESSION,
+      JSON.stringify({ content: editor.value, saved: savedContent, path: currentPath }),
+    );
+  } catch (err) {
+    console.warn('session persist failed:', err);
+  }
+}
+function persistSession(): void {
+  if (persistTimer) clearTimeout(persistTimer);
+  persistTimer = setTimeout(flushSession, 300);
+}
+
+function persistSettings(): void {
+  try {
+    localStorage.setItem(STORAGE_SETTINGS, JSON.stringify(readPdfOptions()));
+  } catch (err) {
+    console.warn('settings persist failed:', err);
+  }
+}
+
+function restoreSettings(): void {
+  const s = readJson<StoredSettings>(STORAGE_SETTINGS);
+  if (!s) return;
+  const size = $<HTMLSelectElement>('opt-pagesize');
+  if (['A4', 'Letter', 'Legal'].includes(s.pageSize ?? '')) size.value = s.pageSize!;
+  const ori = $<HTMLSelectElement>('opt-orientation');
+  if (['portrait', 'landscape'].includes(s.orientation ?? '')) ori.value = s.orientation!;
+  if (typeof s.marginMm === 'number' && s.marginMm >= 0 && s.marginMm <= 50) {
+    $<HTMLInputElement>('opt-margin').value = String(s.marginMm);
+  }
+  if (typeof s.pageNumbers === 'boolean') {
+    $<HTMLInputElement>('opt-pagenums').checked = s.pageNumbers;
+  }
+  if (typeof s.bookmarks === 'boolean') {
+    $<HTMLInputElement>('opt-bookmarks').checked = s.bookmarks;
+  }
+}
+
 // ---- state ----------------------------------------------------------------
 let currentPath: string | null = null;
 let savedContent = DEFAULT_DOC;
@@ -119,6 +198,7 @@ async function openFile(path?: string): Promise<void> {
     setDirty(false);
     api.setDirty(false, fileName());
     updateStats();
+    flushSession();
     scheduleRender();
     status(`Opened ${fileName()}`);
   } catch (err) {
@@ -139,6 +219,7 @@ async function saveFile(forceDialog = false): Promise<boolean> {
   setDirty(false);
   api.setDirty(false, fileName());
   updateStats();
+  flushSession();
   status(`Saved ${fileName()}`);
   return true;
 }
@@ -200,6 +281,11 @@ api.onMenu((action) => {
     case 'export':
       void exportPdf();
       break;
+    case 'load-sample':
+      editor.value = DEFAULT_DOC;
+      editor.dispatchEvent(new Event('input'));
+      status('Sample document loaded (Help menu)');
+      break;
   }
 });
 
@@ -208,11 +294,17 @@ $<HTMLButtonElement>('btn-open').addEventListener('click', () => void openFile()
 $<HTMLButtonElement>('btn-save').addEventListener('click', () => void saveFile(false));
 $<HTMLButtonElement>('btn-export').addEventListener('click', () => void exportPdf());
 
+// Export settings survive restarts.
+for (const id of ['opt-pagesize', 'opt-orientation', 'opt-margin', 'opt-pagenums', 'opt-bookmarks']) {
+  $(id).addEventListener('change', persistSettings);
+}
+
 // ---- editor ----------------------------------------------------------------
 editor.addEventListener('input', () => {
   setDirty(editor.value !== savedContent);
   updateStats();
   scheduleRender();
+  persistSession();
 });
 
 editor.addEventListener('keydown', (e) => {
@@ -287,8 +379,24 @@ window.addEventListener('drop', (e) => {
 // never closes, app.quit() hangs, `npm run dev` never returns.
 
 // ---- init ------------------------------------------------------------------
-editor.value = DEFAULT_DOC;
-savedContent = DEFAULT_DOC;
+const storedSession = readJson<StoredSession>(STORAGE_SESSION);
+const isFirstRun = !storedSession || typeof storedSession.content !== 'string';
+if (isFirstRun) {
+  editor.value = DEFAULT_DOC;
+  savedContent = DEFAULT_DOC;
+} else {
+  editor.value = storedSession.content;
+  savedContent = typeof storedSession.saved === 'string' ? storedSession.saved : storedSession.content;
+  currentPath = typeof storedSession.path === 'string' ? storedSession.path : null;
+}
+restoreSettings();
 updateStats();
+// Sync main-process dirty flag + window title (setDirty no-ops when false).
+api.setDirty(editor.value !== savedContent, fileName());
 void doRender();
-status('Ready — Ctrl+O open · Ctrl+S save · Ctrl+E export PDF');
+window.addEventListener('unload', flushSession); // last-chance flush
+status(
+  isFirstRun
+    ? 'Ready — Ctrl+O open · Ctrl+S save · Ctrl+E export PDF'
+    : `Session restored${currentPath ? ` (${fileName()})` : ''}`,
+);

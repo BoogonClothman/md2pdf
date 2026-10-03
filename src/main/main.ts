@@ -68,6 +68,11 @@ function buildMenu(): void {
       label: 'Help',
       submenu: [
         {
+          label: 'Load Sample Document',
+          click: () => sendMenu('load-sample'),
+        },
+        { type: 'separator' },
+        {
           label: 'About md2pdf',
           click: () => {
             dialog.showMessageBox({
@@ -91,13 +96,16 @@ function createWindow(): void {
     minWidth: 720,
     minHeight: 480,
     show: false,
-    backgroundColor: '#1f2329',
+    backgroundColor: '#ffffff',
     webPreferences: {
       preload: preloadPath,
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
       spellcheck: false,
+      // Exit self-tests must not read/write the user's real session
+      // (localStorage): use an in-memory partition while autotesting.
+      ...(autoExitMode ? { partition: 'md2pdf-autotest' } : {}),
     },
   });
 
@@ -215,7 +223,8 @@ app.whenReady().then(() => {
   createWindow();
   mainWindow?.webContents.on('did-finish-load', () => {
     for (const p of pendingOpens.splice(0)) sendMenu(`open:${p}`);
-    if (autoExitMode) void runAutoExit(autoExitMode);
+    if (autoMemoryMode) void runMemoryTest(autoMemoryMode);
+    else if (autoExitMode) void runAutoExit(autoExitMode);
   });
 
   app.on('activate', () => {
@@ -250,6 +259,47 @@ async function runAutoExit(mode: string): Promise<void> {
     win.close();
   }
   // Expected: window closes -> window-all-closed -> app.quit() -> exit 0.
+}
+
+// ---- Automated session-memory self-test ------------------------------------
+// `MD2PDF_AUTOTEST_MEMORY=write|read|clear` drives the REAL init/restore/
+// persist path (same userData store a user would get) across three process
+// runs: write a marker draft -> relaunch and assert it came back -> clear.
+const autoMemoryMode = process.env.MD2PDF_AUTOTEST_MEMORY;
+
+async function runMemoryTest(phase: string): Promise<void> {
+  const win = mainWindow;
+  if (!win) return;
+  if (phase === 'write') {
+    await win.webContents.executeJavaScript(`
+      (() => {
+        const ed = document.getElementById('editor');
+        ed.value = 'MEMORY-PROBE-MARKER';
+        ed.dispatchEvent(new Event('input'));
+        const m = document.getElementById('opt-margin');
+        m.value = '33';
+        m.dispatchEvent(new Event('change'));
+        return true;
+      })()`);
+    await new Promise((r) => setTimeout(r, 700)); // persist debounce is 300ms
+    console.log('MEMTEST write ok');
+    app.exit(0);
+  } else if (phase === 'read') {
+    const r = await win.webContents.executeJavaScript(`
+      (() => ({
+        marker: document.getElementById('editor').value.includes('MEMORY-PROBE-MARKER'),
+        margin: document.getElementById('opt-margin').value,
+        status: document.getElementById('status-msg').textContent,
+      }))()`);
+    console.log(`MEMTEST read ${JSON.stringify(r)}`);
+    app.exit(r.marker === true && r.margin === '33' ? 0 : 1);
+  } else if (phase === 'clear') {
+    await win.webContents.executeJavaScript('localStorage.clear(); true');
+    console.log('MEMTEST cleared');
+    app.exit(0);
+  } else {
+    app.exit(2);
+  }
 }
 
 app.on('open-file', (_e, p) => {

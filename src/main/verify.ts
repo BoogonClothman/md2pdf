@@ -110,6 +110,9 @@ async function main(): Promise<void> {
       nodeIntegration: false,
       sandbox: true,
       spellcheck: false,
+      // In-memory partition: hermetic first-run state (fresh localStorage),
+      // so content assertions don't depend on the user's real session.
+      partition: 'md2pdf-verify',
     },
   });
   await win.loadFile(path.join(__dirname, '../renderer/index.html'));
