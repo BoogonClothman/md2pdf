@@ -1,5 +1,7 @@
 # md2pdf
 
+[![CI](https://github.com/BoogonClothman/md2pdf/actions/workflows/ci.yml/badge.svg)](https://github.com/BoogonClothman/md2pdf/actions/workflows/ci.yml)
+
 Markdown → PDF 桌面应用（Windows / macOS / Linux）。
 
 Electron 桌面 GUI：分栏编辑器 + 实时预览，PDF 导出走 Chromium

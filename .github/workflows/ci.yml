@@ -82,6 +82,14 @@ jobs:
         if: runner.os == 'macOS'
         run: npm run dist:mac
 
+      - name: Package portable zip (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $v = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          Compress-Archive -Path release/win-unpacked/* `
+            -DestinationPath "release/md2pdf-$v-win-x64-portable.zip" -Force
+
       - name: List artifacts
         shell: bash
         run: ls -lh release/ | grep -vE 'unpacked|builder-debug|nsis.7z' || true
@@ -94,6 +102,9 @@ jobs:
             release/*.AppImage
             release/*.deb
             release/*.exe
+            release/*.exe.blockmap
             release/*.dmg
+            release/*.dmg.blockmap
+            release/*.zip
           if-no-files-found: error
           retention-days: 7
