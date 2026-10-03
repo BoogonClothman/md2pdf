@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    env:
+      # GitHub runners are outside CN - use official mirrors for electron/electron-builder
+      # binaries (npm packages still follow package-lock resolved URLs).
+      ELECTRON_MIRROR: https://github.com/electron/electron/releases/download/
+      ELECTRON_BUILDER_BINARIES_MIRROR: https://github.com/electron-userland/electron-builder-binaries/releases/download/
+      # macOS: never try to discover a signing identity (we ship unsigned in CI)
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Verify (Linux, headless via Xvfb)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update && sudo apt-get install -y xvfb
+          fi
+          xvfb-run --auto-servernum npm run verify
+
+      - name: Verify (Windows / macOS)
+        if: runner.os != 'Linux'
+        run: npm run verify
+
+      - name: Package (Linux)
+        if: runner.os == 'Linux'
+        run: npm run dist:linux
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        run: npm run dist:win
+
+      - name: Package (macOS)
+        if: runner.os == 'macOS'
+        run: npm run dist:mac
+
+      - name: List artifacts
+        shell: bash
+        run: ls -lh release/ | grep -vE 'unpacked|builder-debug|nsis.7z' || true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: md2pdf-${{ matrix.os }}
+          path: |
+            release/*.AppImage
+            release/*.deb
+            release/*.exe
+            release/*.dmg
+          if-no-files-found: error
+          retention-days: 7

@@ -3,7 +3,7 @@
 // Kept in one module so the real app and the verify harness behave the same.
 
 import { app } from 'electron';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 /** True when running inside WSL(2). */
 export function isWsl(): boolean {
@@ -16,12 +16,13 @@ export function isWsl(): boolean {
 }
 
 export function applyPlatformSwitches(): void {
-  // WSL exposes no /dev/dri: Chromium's GPU process fails to initialize and
-  // spams "Creation of StagingBuffer's SharedImage failed" on every repaint
-  // before falling back to software rendering. Skip the GPU dance entirely
-  // there; an editor/document renderer doesn't need it. Desktop
-  // Windows/macOS/Linux keep hardware acceleration.
-  if (isWsl()) {
+  // Linux boxes without a GPU device node (WSL, headless CI runners):
+  // Chromium's GPU process fails to initialize and spams
+  // "Creation of StagingBuffer's SharedImage failed" on every repaint before
+  // falling back to software rendering. Skip the GPU dance there; an
+  // editor/document renderer doesn't need it. Desktop Windows/macOS/Linux
+  // (with /dev/dri) keep hardware acceleration.
+  if (process.platform === 'linux' && (isWsl() || !existsSync('/dev/dri'))) {
     app.commandLine.appendSwitch('disable-gpu');
   }
 
