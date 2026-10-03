@@ -36,7 +36,10 @@
   </header>
 
   <main id="split">
-    <textarea id="editor" spellcheck="false" aria-label="Markdown source"></textarea>
+    <div id="editor-wrap">
+      <pre id="editor-highlight" aria-hidden="true"></pre>
+      <textarea id="editor" spellcheck="false" aria-label="Markdown source"></textarea>
+    </div>
     <div id="divider"></div>
     <div id="preview-wrap">
       <article id="preview" class="doc"></article>
