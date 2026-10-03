@@ -5,10 +5,9 @@ import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { exportToPdf } from './export';
 import type { ExportRequest, ExportResult, OpenFileResult, SaveResult } from '../shared/types';
+import { applyPlatformSwitches } from './switches';
 
-// WSL/containers: Chromium's shared-memory segment in /dev/shm can be flaky
-// (ESRCH errors observed on WSL2). Using /tmp instead is harmless elsewhere.
-app.commandLine.appendSwitch('disable-dev-shm-usage');
+applyPlatformSwitches(); // must run before app.whenReady()
 
 let mainWindow: BrowserWindow | null = null;
 let dirty = false;

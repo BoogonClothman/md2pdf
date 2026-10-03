@@ -11,7 +11,10 @@ import { spawn } from 'node:child_process';
 import { readFile, stat, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { exportToPdf } from './export';
+import { applyPlatformSwitches } from './switches';
 import type { PdfOptions } from '../shared/types';
+
+applyPlatformSwitches(); // must run before app.whenReady()
 
 const OUT_DIR = path.resolve(__dirname, '../../../verify-md2pdf');
 
