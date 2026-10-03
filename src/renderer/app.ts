@@ -3,13 +3,15 @@
 import './styles.css';
 import './doc.css';
 import { renderInto } from './render';
-import { extractTitle } from '../shared/markdown';
+import { highlightMarkdown } from './highlight-markdown';
 import type { PdfOptions } from '../shared/types';
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
 const api = window.api;
 
 const editor = $<HTMLTextAreaElement>('editor');
+const editorWrap = $<HTMLElement>('editor-wrap');
+const editorHighlight = $<HTMLElement>('editor-highlight');
 const preview = $<HTMLElement>('preview');
 const previewWrap = $<HTMLElement>('preview-wrap');
 const divider = $<HTMLElement>('divider');
@@ -200,6 +202,7 @@ async function openFile(path?: string): Promise<void> {
     updateStats();
     flushSession();
     scheduleRender();
+    scheduleHighlight();
     status(`Opened ${fileName()}`);
   } catch (err) {
     status(`Open failed: ${String(err)}`, true);
@@ -300,10 +303,40 @@ for (const id of ['opt-pagesize', 'opt-orientation', 'opt-margin', 'opt-pagenums
 }
 
 // ---- editor ----------------------------------------------------------------
+// Syntax highlighting for the markdown source: the textarea's text is
+// transparent and #editor-highlight (a <pre> stacked behind it, see
+// styles.css) shows highlightMarkdown() output for the same text. Alignment
+// relies on identical layout rules + mirrored scrollTop + the trailing-
+// newline compensation inside refreshHighlight().
+
+function refreshHighlight(): void {
+  const text = editor.value;
+  const html = highlightMarkdown(text);
+  // Chromium draws no line box for a <pre>'s final trailing newline while the
+  // textarea does: for a document ending in "\n" the layers would differ by
+  // one line (and scroll out of sync) without appending one here.
+  editorHighlight.innerHTML = html + (text.endsWith('\n') ? '\n' : '');
+  editorHighlight.scrollTop = editor.scrollTop;
+}
+
+let highlightTimer: ReturnType<typeof setTimeout> | null = null;
+function scheduleHighlight(): void {
+  if (highlightTimer) return; // throttle, not debounce: colors keep up while typing
+  highlightTimer = setTimeout(() => {
+    highlightTimer = null;
+    refreshHighlight();
+  }, 50);
+}
+
+editor.addEventListener('scroll', () => {
+  editorHighlight.scrollTop = editor.scrollTop;
+});
+
 editor.addEventListener('input', () => {
   setDirty(editor.value !== savedContent);
   updateStats();
   scheduleRender();
+  scheduleHighlight();
   persistSession();
 });
 
@@ -338,9 +371,10 @@ window.addEventListener('mousemove', (e) => {
   const rect = split.getBoundingClientRect();
   const pct = ((e.clientX - rect.left) / rect.width) * 100;
   const clamped = Math.max(15, Math.min(85, pct));
-  const [left, right] = Array.from(split.children) as HTMLElement[];
-  left.style.flex = `0 0 ${clamped}%`;
-  right.style.flex = `0 0 ${100 - clamped}%`;
+  // Explicit element refs: split.children has the divider in the middle, so
+  // positional destructuring would flex the divider instead of the preview.
+  editorWrap.style.flex = `0 0 ${clamped}%`;
+  previewWrap.style.flex = `0 0 ${100 - clamped}%`;
 });
 window.addEventListener('mouseup', () => {
   if (!dragging) return;
@@ -391,6 +425,7 @@ if (isFirstRun) {
 }
 restoreSettings();
 updateStats();
+refreshHighlight(); // paint tokens before the first preview render
 // Sync main-process dirty flag + window title (setDirty no-ops when false).
 api.setDirty(editor.value !== savedContent, fileName());
 void doRender();

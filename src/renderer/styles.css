@@ -98,23 +98,56 @@ body {
   min-height: 0;
 }
 
-#editor {
+/* The editor is a textarea stacked on top of a <pre> highlight layer. The
+   textarea's own text is transparent; the colored highlight.js tokens from
+   #editor-highlight show through. The two layers must stay pixel-aligned:
+   - identical font / line-height / padding / wrapping rules (grouped below);
+   - both use overflow-y: scroll so the scrollbar gutter - which removes
+     wrap width - is always the same, otherwise long lines drift apart;
+   - app.ts mirrors scrollTop on every textarea scroll event;
+   - Chromium renders no line box for a <pre>'s final trailing newline
+     (textarea does), so refreshHighlight() appends one when needed. */
+#editor-wrap {
+  position: relative;
   flex: 1 1 50%;
   min-width: 0;
-  resize: none;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+#editor,
+#editor-highlight {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 16px;
   border: none;
   outline: none;
-  padding: 16px;
-  background: #ffffff;
-  color: #1f2328;
-  caret-color: #1f2328;
   font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
   font-size: 13.5px;
   line-height: 1.6;
   tab-size: 2;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  overflow-y: scroll;
+}
+
+#editor-highlight {
+  z-index: 0;
+  color: #1f2328;
+  pointer-events: none; /* clicks, typing, selection and the scrollbar all belong to the textarea */
+}
+
+#editor {
+  z-index: 1;
+  resize: none;
+  background: transparent;
+  color: transparent;
+  caret-color: #1f2328;
 }
 #editor::placeholder { color: #8b949e; }
-#editor::selection { background: #b6e3ff; }
+/* Translucent selection: the token colors underneath stay visible. */
+#editor::selection { background: #b6e3ff99; }
 
 #divider {
   flex: 0 0 5px;

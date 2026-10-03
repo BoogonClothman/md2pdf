@@ -146,6 +146,13 @@
 .hljs-meta { color: #57606a; }
 .hljs-deletion { color: #82071e; }
 
+/* Markdown-source tokens: produced when highlighting .md source (the editor
+   overlay) or a ```markdown fence in the rendered output. */
+.hljs-strong { font-weight: 700; }
+.hljs-emphasis { font-style: italic; }
+.hljs-code { background: var(--doc-code-bg); }
+.hljs-link { color: var(--doc-accent); }
+
 /* ---- Print / PDF output ---- */
 @page {
   size: A4;
