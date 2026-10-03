@@ -12,9 +12,11 @@ import { readFile, stat, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { exportToPdf } from './export';
 import { applyPlatformSwitches } from './switches';
+import { applySecurityPolicy } from './security';
 import type { PdfOptions } from '../shared/types';
 
 applyPlatformSwitches(); // must run before app.whenReady()
+applySecurityPolicy(path.join(__dirname, '../renderer'));
 
 const OUT_DIR = path.resolve(__dirname, '../../../verify-md2pdf');
 
@@ -139,6 +141,22 @@ async function main(): Promise<void> {
     sup.found === true && sup.supAbove === true && sup.delta > 1,
     `KaTeX superscript sits above baseline (delta=${typeof sup.delta === 'number' ? sup.delta.toFixed(1) : 'n/a'}px)`,
   ) && ok;
+
+  // ---- 4. Security guards (untrusted markdown must not reach remote) ----
+  const nav = await win.webContents.executeJavaScript(`
+    window.location.assign('https://example.com/');
+    new Promise((r) => setTimeout(() => r(window.location.protocol), 700))
+  `);
+  ok = await check(
+    nav === 'file:',
+    `renderer-initiated navigation blocked (protocol=${nav})`,
+  ) && ok;
+
+  const pop = await win.webContents.executeJavaScript(`
+    (() => { const w = window.open('https://example.com/');
+             if (w) w.close(); return w ? 'opened' : 'denied'; })()
+  `);
+  ok = await check(pop === 'denied', `window.open denied (${pop})`) && ok;
 
   const img = await win.webContents.capturePage();
   const png = path.join(OUT_DIR, 'verify-window.png');

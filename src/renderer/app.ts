@@ -224,10 +224,14 @@ editor.addEventListener('keydown', (e) => {
   }
 });
 
-// Never let preview links navigate the app window away.
+// Preview links: never navigate the app window (main-process will-navigate
+// guards this too); http(s)/mailto links open in the system browser.
 preview.addEventListener('click', (e) => {
   const a = (e.target as HTMLElement).closest('a');
-  if (a) e.preventDefault();
+  if (!a) return;
+  e.preventDefault();
+  const href = a.getAttribute('href') || '';
+  if (/^(https?|mailto):/i.test(href)) api.openExternal(href);
 });
 
 // ---- split divider drag ----------------------------------------------------

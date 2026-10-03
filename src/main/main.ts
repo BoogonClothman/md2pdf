@@ -6,8 +6,10 @@ import path from 'node:path';
 import { exportToPdf } from './export';
 import type { ExportRequest, ExportResult, OpenFileResult, SaveResult } from '../shared/types';
 import { applyPlatformSwitches } from './switches';
+import { applySecurityPolicy } from './security';
 
 applyPlatformSwitches(); // must run before app.whenReady()
+applySecurityPolicy(path.join(__dirname, '../renderer'));
 
 let mainWindow: BrowserWindow | null = null;
 let dirty = false;

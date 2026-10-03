@@ -18,6 +18,9 @@ const api: Md2PdfApi = {
   forceClose: (): void => {
     ipcRenderer.send('force-close');
   },
+  openExternal: (url: string): void => {
+    ipcRenderer.send('open-external', url);
+  },
 
   getPathForFile: (file: File): string => webUtils.getPathForFile(file),
 

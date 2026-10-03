@@ -46,6 +46,8 @@ export interface Md2PdfApi {
   pdfExport(req: ExportRequest): Promise<ExportResult>;
   setDirty(dirty: boolean, fileName?: string): void;
   forceClose(): void;
+  /** Open an http(s)/mailto URL in the system browser (scheme-validated in main). */
+  openExternal(url: string): void;
   getPathForFile(file: File): string;
   onMenu(cb: (action: string) => void): void;
   /** Export page only: */
