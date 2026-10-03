@@ -1,0 +1,179 @@
+/* Document content styles: used by BOTH the preview pane and the PDF export
+   page (which also applies @media print rules). */
+
+:root {
+  --doc-text: #24292f;
+  --doc-muted: #57606a;
+  --doc-bg: #ffffff;
+  --doc-border: #d0d7de;
+  --doc-accent: #0969da;
+  --doc-code-bg: #f6f8fa;
+  --doc-blockquote: #57606a;
+}
+
+.doc {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial,
+    sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--doc-text);
+  background: var(--doc-bg);
+  word-wrap: break-word;
+}
+
+.doc > *:first-child {
+  margin-top: 0;
+}
+
+.doc h1,
+.doc h2,
+.doc h3,
+.doc h4,
+.doc h5,
+.doc h6 {
+  margin: 1.5em 0 0.6em;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.doc h1 {
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--doc-border);
+  font-size: 2em;
+}
+.doc h2 {
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--doc-border);
+  font-size: 1.5em;
+}
+.doc h3 { font-size: 1.25em; }
+.doc h4 { font-size: 1em; }
+
+.doc p { margin: 0 0 1em; }
+
+.doc a { color: var(--doc-accent); text-decoration: none; }
+.doc a:hover { text-decoration: underline; }
+
+.doc ul, .doc ol { margin: 0 0 1em; padding-left: 2em; }
+.doc li + li { margin-top: 0.25em; }
+.doc li > p { margin-bottom: 0.5em; }
+
+.doc blockquote {
+  margin: 0 0 1em;
+  padding: 0 1em;
+  color: var(--doc-blockquote);
+  border-left: 0.25em solid var(--doc-border);
+}
+
+.doc code {
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  font-size: 85%;
+  background: var(--doc-code-bg);
+  border-radius: 6px;
+  padding: 0.2em 0.4em;
+}
+
+.doc pre {
+  background: var(--doc-code-bg);
+  border-radius: 6px;
+  padding: 16px;
+  overflow: auto;
+  margin: 0 0 1em;
+  line-height: 1.45;
+}
+.doc pre code {
+  background: transparent;
+  padding: 0;
+  font-size: 85%;
+  white-space: pre;
+}
+
+.doc table {
+  border-collapse: collapse;
+  margin: 0 0 1em;
+  width: auto;
+  display: block;
+  overflow: auto;
+}
+.doc th, .doc td {
+  border: 1px solid var(--doc-border);
+  padding: 6px 13px;
+}
+.doc th {
+  background: var(--doc-code-bg);
+  font-weight: 600;
+}
+.doc tr:nth-child(2n) { background: #f6f8fa; }
+
+.doc img { max-width: 100%; }
+
+.doc hr {
+  height: 0.25em;
+  margin: 1.5em 0;
+  background: var(--doc-border);
+  border: 0;
+}
+
+.doc input[type='checkbox'] {
+  margin-right: 0.4em;
+  vertical-align: middle;
+}
+
+/* KaTeX */
+.doc .katex-display {
+  margin: 1em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* Mermaid */
+.mermaid-block {
+  margin: 0 0 1em;
+  text-align: center;
+}
+.mermaid-block svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ---- highlight.js tokens (GitHub-ish light theme) ---- */
+.hljs-comment, .hljs-quote { color: #6e7781; font-style: italic; }
+.hljs-keyword, .hljs-selector-tag, .hljs-template-tag { color: #cf222e; }
+.hljs-string, .hljs-regexp, .hljs-addition { color: #0a3069; }
+.hljs-number, .hljs-literal, .hljs-symbol, .hljs-bullet { color: #0550ae; }
+.hljs-title, .hljs-section, .hljs-name, .hljs-function { color: #8250df; }
+.hljs-attr, .hljs-attribute, .hljs-variable, .hljs-template-variable { color: #953800; }
+.hljs-built_in, .hljs-type { color: #0550ae; }
+.hljs-meta { color: #57606a; }
+.hljs-deletion { color: #82071e; }
+
+/* ---- Print / PDF output ---- */
+@page {
+  size: A4;
+}
+
+@media print {
+  html, body {
+    background: #fff;
+    margin: 0;
+    padding: 0;
+  }
+  .doc {
+    font-size: 11.5pt;
+  }
+  /* Avoid page breaks in awkward places. */
+  h1, h2, h3, h4, h5, h6 {
+    break-after: avoid-page;
+    page-break-after: avoid;
+  }
+  pre, blockquote, table, figure, .mermaid-block {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  a { color: var(--doc-text); }
+  a[href^='http']::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.8em;
+    color: var(--doc-muted);
+    word-break: break-all;
+  }
+}

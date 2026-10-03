@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' file: data: https:; font-src 'self' data:; connect-src 'none'" />
+  <title>md2pdf</title>
+  <link rel="stylesheet" href="app.css" />
+  <link rel="stylesheet" href="katex.min.css" />
+</head>
+<body>
+  <header id="toolbar">
+    <span class="brand">md2pdf</span>
+    <button id="btn-open">Open</button>
+    <button id="btn-save">Save</button>
+    <button id="btn-export" class="primary">Export PDF</button>
+    <span class="sep"></span>
+    <label>Size
+      <select id="opt-pagesize">
+        <option value="A4" selected>A4</option>
+        <option value="Letter">Letter</option>
+        <option value="Legal">Legal</option>
+      </select>
+    </label>
+    <label>Orientation
+      <select id="opt-orientation">
+        <option value="portrait" selected>Portrait</option>
+        <option value="landscape">Landscape</option>
+      </select>
+    </label>
+    <label>Margin
+      <input type="number" id="opt-margin" value="20" min="0" max="50" step="1" /> mm
+    </label>
+    <label><input type="checkbox" id="opt-pagenums" checked /> #s</label>
+    <label><input type="checkbox" id="opt-bookmarks" checked /> Bookmarks</label>
+  </header>
+
+  <main id="split">
+    <textarea id="editor" spellcheck="false" aria-label="Markdown source"></textarea>
+    <div id="divider"></div>
+    <div id="preview-wrap">
+      <article id="preview" class="doc"></article>
+    </div>
+  </main>
+
+  <footer id="statusbar">
+    <span id="status-file">untitled</span>
+    <span id="status-stats"></span>
+    <span class="spacer"></span>
+    <span id="status-msg"></span>
+  </footer>
+
+  <div id="drop-overlay">Drop .md file to open</div>
+
+  <script src="app.js"></script>
+</body>
+</html>

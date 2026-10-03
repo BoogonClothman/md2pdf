@@ -1,0 +1,33 @@
+{
+  "name": "md2pdf",
+  "version": "0.1.0",
+  "description": "Markdown to PDF converter - cross-platform desktop GUI app (Windows / macOS / Linux)",
+  "main": "dist/main/main.js",
+  "license": "MIT",
+  "author": "md2pdf",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "npm run build && electron .",
+    "verify": "npm run build && electron dist/main/verify.js",
+    "typecheck": "tsc --noEmit",
+    "dist": "npm run build && electron-builder"
+  },
+  "dependencies": {
+    "dompurify": "^3.2.4",
+    "highlight.js": "^11.11.1",
+    "katex": "^0.16.22",
+    "markdown-it": "^14.1.0",
+    "mermaid": "^11.6.0"
+  },
+  "devDependencies": {
+    "@types/markdown-it": "^14.1.2",
+    "@types/node": "^22.14.0",
+    "electron": "^37.0.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.8.0"
+  },
+  "allowScripts": {
+    "electron@37.10.3": true,
+    "esbuild@0.25.12": true
+  }
+}
