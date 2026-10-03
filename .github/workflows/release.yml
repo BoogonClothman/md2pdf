@@ -1,0 +1,93 @@
+name: Release
+
+# Push a tag like v0.2.0 -> publishes a GitHub Release whose body is the
+# hand-written notes file docs/releases/v0.2.0.md (filename MUST equal the
+# tag). Build pipeline is reused from ci.yml via workflow_call; this
+# workflow only adds preflight checks + publishing.
+
+on:
+  push:
+    tags: ['v*']
+
+concurrency:
+  group: release-${{ github.ref }}
+  # Never cancel a publishing run halfway; a re-run is idempotent
+  # (release body is refreshed, assets are uploaded with --clobber).
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    name: Notes + version checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Require docs/releases/<tag>.md
+        run: |
+          NOTES="docs/releases/${GITHUB_REF_NAME}.md"
+          if [ ! -f "$NOTES" ]; then
+            echo "::error::Missing release notes: $NOTES (filename must equal the tag)"
+            exit 1
+          fi
+
+      - name: Tag must match package.json version
+        run: |
+          V="$(node -p "require('./package.json').version")"
+          if [ "$GITHUB_REF_NAME" != "v$V" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match package.json version v${V}"
+            exit 1
+          fi
+
+  build:
+    name: Build (reused CI)
+    needs: preflight
+    permissions:
+      contents: read
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    name: Publish GitHub Release
+    needs: [preflight, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout (release notes)
+        uses: actions/checkout@v7
+
+      - name: Download artifacts from all platforms
+        uses: actions/download-artifact@v7
+        with:
+          path: release
+          merge-multiple: true
+
+      - name: Generate SHA256SUMS.txt
+        run: |
+          cd release
+          sha256sum * | sort -k2 > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="$GITHUB_REF_NAME"
+          NOTES="docs/releases/$TAG.md"
+          extra=()
+          case "$TAG" in *-*) extra+=(--prerelease);; esac
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            # re-run / tag moved: refresh body from docs, re-attach assets
+            gh release edit "$TAG" --notes-file "$NOTES" "${extra[@]}"
+            gh release upload "$TAG" release/* --clobber
+          else
+            gh release create "$TAG" \
+              --title "md2pdf $TAG" \
+              --notes-file "$NOTES" \
+              --verify-tag \
+              "${extra[@]}" \
+              release/*
+          fi

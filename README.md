@@ -53,6 +53,30 @@ ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-
 npm run dist:linux
 ```
 
+## 发行
+
+发行说明**手写**、按版本归档在 [`docs/releases/`](docs/releases/)，文件名必须
+等于 tag（如 `docs/releases/v0.2.0.md`）。GitHub Release 的正文直接取自该文件
+——想翻任意历史版本的发行文档，仓库里就有，不用去 GitHub 上爬。
+
+发新版四步：
+
+```bash
+$EDITOR docs/releases/v0.2.0.md              # 1. 写发行文档
+npm version 0.2.0 --no-git-tag-version       # 2. 同步 package.json 版本号
+git commit -am "release: v0.2.0"             # 3. 提交
+git tag v0.2.0 && git push origin main v0.2.0  # 4. 打 tag 并推送
+```
+
+推送 tag 后 `release.yml` 自动执行：
+
+1. **preflight** —— 校验 `docs/releases/<tag>.md` 存在、tag == `v` +
+   package.json 版本号；不满足立刻失败，不白跑三平台构建
+2. **build** —— 复用 CI 流水线（typecheck / verify / 三平台打包）
+3. **publish** —— 生成 `SHA256SUMS.txt`，以文档为正文创建 Release 并上传
+   全部安装包；含 `-` 的 tag（如 `v0.2.0-rc.1`）自动标为 pre-release；
+   重跑会按最新文档刷新正文并覆盖资产
+
 ## 架构
 
 ```
