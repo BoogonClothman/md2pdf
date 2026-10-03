@@ -276,13 +276,11 @@ window.addEventListener('drop', (e) => {
   if (p) void openFile(p);
 });
 
-// ---- unsaved-changes guard on window close ---------------------------------
-window.addEventListener('beforeunload', (e) => {
-  if (dirty) {
-    e.preventDefault();
-    e.returnValue = '';
-  }
-});
+// Unsaved-changes guard lives ONLY in the main process (BrowserWindow 'close'
+// dialog). A renderer-side beforeunload here would conflict with it: after
+// the user picks "Discard", main calls forceClose+close, but beforeunload
+// still sees dirty=true and Electron silently blocks the close -> window
+// never closes, app.quit() hangs, `npm run dev` never returns.
 
 // ---- init ------------------------------------------------------------------
 editor.value = DEFAULT_DOC;

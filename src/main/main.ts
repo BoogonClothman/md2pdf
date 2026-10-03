@@ -100,7 +100,12 @@ function createWindow(): void {
     },
   });
 
-  mainWindow.loadFile(path.join(rendererDir, 'index.html'));
+  mainWindow.loadFile(path.join(rendererDir, 'index.html')).catch((err) => {
+    // Load failures are surfaced via did-fail-load; swallow to avoid an
+    // unhandled rejection killing the process under
+    // --unhandled-rejections=strict.
+    console.error('main window load failed:', err);
+  });
 
   mainWindow.once('ready-to-show', () => mainWindow?.show());
 
@@ -126,6 +131,11 @@ function createWindow(): void {
 
   mainWindow.on('closed', () => {
     mainWindow = null;
+    // Reset so a future window (macOS re-activate) gets its own
+    // unsaved-changes dialog instead of being force-closed silently.
+    forceClose = false;
+    dirty = false;
+    currentFileName = '';
   });
 }
 
@@ -204,12 +214,42 @@ app.whenReady().then(() => {
   createWindow();
   mainWindow?.webContents.on('did-finish-load', () => {
     for (const p of pendingOpens.splice(0)) sendMenu(`open:${p}`);
+    if (autoExitMode) void runAutoExit(autoExitMode);
   });
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
+
+// ---- Automated exit self-test ----------------------------------------------
+// `MD2PDF_AUTOTEST_EXIT=clean|dirty` lets the verify harness spawn the REAL
+// app and assert the process exits cleanly (guards against regressions like
+// the renderer beforeunload double-guard that used to hang `npm run dev`).
+const autoExitMode = process.env.MD2PDF_AUTOTEST_EXIT;
+
+async function runAutoExit(mode: string): Promise<void> {
+  const win = mainWindow;
+  if (!win) return;
+  if (mode === 'dirty') {
+    // Drive a real edit through the editor so the dirty flag flows through
+    // the same ipc path as user typing, then emulate the "Discard" branch
+    // (forceClose bypasses the dialog - dialogs can't be automated headless).
+    await win.webContents.executeJavaScript(`
+      const ed = document.getElementById('editor');
+      ed.value += '\\nautotest edit';
+      ed.dispatchEvent(new Event('input'));
+      true;`);
+    await new Promise((r) => setTimeout(r, 400)); // let set-dirty ipc arrive
+    console.log('AUTOTEST: closing dirty window (Discard path)');
+    forceClose = true;
+    win.close();
+  } else {
+    console.log('AUTOTEST: closing clean window');
+    win.close();
+  }
+  // Expected: window closes -> window-all-closed -> app.quit() -> exit 0.
+}
 
 app.on('open-file', (_e, p) => {
   // macOS Finder file association

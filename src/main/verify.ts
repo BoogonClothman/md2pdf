@@ -1,9 +1,13 @@
 // Automated verification (run via `npm run verify`):
 //   1. Exports a feature-complete sample markdown to PDF (no dialogs).
 //   2. Boots the real main window under WSLg and captures a screenshot.
+//   3. Asserts KaTeX superscript geometry (PDF/HTML class mismatch regression).
+//   4. Spawns the REAL app (strict mode) and asserts it exits on clean and
+//      dirty-discard close (guards against the beforeunload hang regression).
 // Exits 0 on success, 1 on any failure.
 
 import { app, BrowserWindow } from 'electron';
+import { spawn } from 'node:child_process';
 import { readFile, stat, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { exportToPdf } from './export';
@@ -140,6 +144,48 @@ async function main(): Promise<void> {
   ok = await check(pngSize > 10_000, `window screenshot captured (${pngSize} bytes)`);
 
   win.destroy();
+
+  // ---- 4. App exit paths: spawn the REAL app under strict mode -----------
+  const tail = (s: string): string => JSON.stringify(s.slice(-300));
+  const testAppExit = (mode: 'clean' | 'dirty'): Promise<{ ok: boolean; detail: string }> =>
+    new Promise((resolve) => {
+      const appRoot = path.resolve(__dirname, '../..'); // md2pdf/ (package.json main)
+      const child = spawn(process.execPath, [appRoot], {
+        env: {
+          ...process.env,
+          MD2PDF_AUTOTEST_EXIT: mode,
+          NODE_OPTIONS: '--unhandled-rejections=strict',
+        },
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+      let out = '';
+      child.stdout.on('data', (d: Buffer) => (out += d));
+      child.stderr.on('data', (d: Buffer) => (out += d));
+      const timer = setTimeout(() => {
+        child.kill('SIGKILL');
+        resolve({ ok: false, detail: `${mode}: HUNG - no exit within 10s ${tail(out)}` });
+      }, 10_000);
+      child.on('error', (e) => {
+        clearTimeout(timer);
+        resolve({ ok: false, detail: `${mode}: spawn error: ${e.message}` });
+      });
+      child.on('exit', (code, signal) => {
+        clearTimeout(timer);
+        const ok = code === 0 && out.includes('AUTOTEST');
+        resolve({
+          ok,
+          detail: `${mode}: exit=${code}${signal ? ` signal=${signal}` : ''}${ok ? '' : ` ${tail(out)}`}`,
+        });
+      });
+    });
+
+  const exitClean = await testAppExit('clean');
+  ok = await check(exitClean.ok, `app exits after clean close - ${exitClean.detail}`) && ok;
+  const exitDirty = await testAppExit('dirty');
+  ok = await check(
+    exitDirty.ok,
+    `app exits after dirty discard close (beforeunload-hang regression) - ${exitDirty.detail}`,
+  ) && ok;
 
   console.log(ok ? '\nALL CHECKS PASSED' : '\nSOME CHECKS FAILED');
   console.log(`outputs in ${OUT_DIR}`);

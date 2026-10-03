@@ -92,6 +92,9 @@ export async function exportToPdf(
     });
 
     const load = win.loadFile(path.join(__dirname, '../renderer/export.html'));
+    // If an error path destroys the window before load settles, this rejection
+    // would otherwise be unhandled (crashes under --unhandled-rejections=strict).
+    load.catch(() => {});
 
     await readyPromise;
     win.webContents.send('export-payload', {
