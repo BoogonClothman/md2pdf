@@ -18,8 +18,12 @@ Help → Load Sample Document 重新加载）。
 npm install
 npm run dev        # 构建并在桌面启动（WSLg 下窗口直接出现在 Windows 桌面）
 npm run typecheck  # tsc --noEmit
+npm run verify:notes  # Agent Notes 机制门禁（结构/格式/链接）
 npm run verify     # 11 项自动化验证（PDF/截图/几何断言/退出路径/安全守卫）
 ```
+
+开发约定与 [Agent Notes](.agents/notes/README.md)（决策留痕机制）见
+[AGENTS.md](AGENTS.md)。
 
 ## 打包
 

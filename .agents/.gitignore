@@ -1,0 +1,4 @@
+# 本地技能目录（pi 按 .agents/skills/ 发现）保持不入库。
+# 注意：.agents/notes/ 下的 Agent Notes 是仓库资产，必须随变更提交——
+# 门禁与 PR review 都依赖它，勿改回全量 "*"。
+skills/
