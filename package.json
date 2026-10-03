@@ -10,25 +10,71 @@
     "dev": "npm run build && electron .",
     "verify": "npm run build && electron dist/main/verify.js",
     "typecheck": "tsc --noEmit",
-    "dist": "npm run build && electron-builder"
-  },
-  "dependencies": {
-    "@vscode/markdown-it-katex": "^1.1.2",
-    "dompurify": "^3.2.4",
-    "highlight.js": "^11.11.1",
-    "katex": "^0.16.22",
-    "markdown-it": "^14.1.0",
-    "mermaid": "^11.6.0"
+    "dist": "npm run build && electron-builder",
+    "dist:linux": "npm run build && electron-builder --linux",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:mac": "npm run build && electron-builder --mac"
   },
   "devDependencies": {
     "@types/markdown-it": "^14.1.2",
     "@types/node": "^22.14.0",
+    "@vscode/markdown-it-katex": "^1.1.2",
+    "dompurify": "^3.2.4",
     "electron": "^37.0.0",
+    "electron-builder": "^26.15.3",
     "esbuild": "^0.25.0",
+    "highlight.js": "^11.11.1",
+    "katex": "^0.16.22",
+    "markdown-it": "^14.1.0",
+    "mermaid": "^11.6.0",
     "typescript": "^5.8.0"
   },
   "allowScripts": {
     "electron@37.10.3": true,
     "esbuild@0.25.12": true
-  }
+  },
+  "build": {
+    "appId": "com.boogon.md2pdf",
+    "productName": "md2pdf",
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "asar": true,
+    "files": [
+      "dist/**/*",
+      "package.json",
+      "!dist/**/*.map",
+      "!dist/main/verify.js"
+    ],
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Office",
+      "synopsis": "Markdown to PDF converter",
+      "maintainer": "BoogonClothman <BoogonClothman@outlook.com>",
+      "syncDesktopName": true
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.productivity"
+    }
+  },
+  "homepage": "https://github.com/BoogonClothman/md2pdf",
+  "desktopName": "md2pdf.desktop"
 }
