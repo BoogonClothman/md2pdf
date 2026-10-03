@@ -6,7 +6,7 @@ Electron 桌面 GUI：分栏编辑器 + 实时预览，PDF 导出走 Chromium
 `printToPDF()` 所见即所得渲染（KaTeX 公式、Mermaid 图表、代码高亮、表格、
 页码、书签大纲）。
 
-![screenshot](../verify-md2pdf/verify-window.png)
+![screenshot](docs/screenshot.png)
 
 ## 开发
 
