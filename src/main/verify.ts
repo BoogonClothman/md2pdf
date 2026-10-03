@@ -187,8 +187,8 @@ async function main(): Promise<void> {
       child.stderr.on('data', (d: Buffer) => (out += d));
       const timer = setTimeout(() => {
         child.kill('SIGKILL');
-        resolve({ ok: false, detail: `${mode}: HUNG - no exit within 10s ${tail(out)}` });
-      }, 10_000);
+        resolve({ ok: false, detail: `${mode}: HUNG - no exit within 15s ${tail(out)}` });
+      }, 15_000);
       child.on('error', (e) => {
         clearTimeout(timer);
         resolve({ ok: false, detail: `${mode}: spawn error: ${e.message}` });

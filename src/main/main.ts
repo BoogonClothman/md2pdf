@@ -253,12 +253,23 @@ async function runAutoExit(mode: string): Promise<void> {
     await new Promise((r) => setTimeout(r, 400)); // let set-dirty ipc arrive
     console.log('AUTOTEST: closing dirty window (Discard path)');
     forceClose = true;
-    win.close();
   } else {
     console.log('AUTOTEST: closing clean window');
-    win.close();
   }
-  // Expected: window closes -> window-all-closed -> app.quit() -> exit 0.
+
+  // Assert the close PATH works (the actual regression surface: unsaved-changes
+  // dialog / forceClose / beforeunload). We cannot rely on process exit here:
+  // macOS deliberately keeps the app alive after the last window closes.
+  const closed = await new Promise<boolean>((resolve) => {
+    const timer = setTimeout(() => resolve(false), 8_000);
+    win.once('closed', () => {
+      clearTimeout(timer);
+      resolve(true);
+    });
+    win.close();
+  });
+  console.log(`AUTOTEST: window closed=${closed}`);
+  app.exit(closed ? 0 : 1);
 }
 
 // ---- Automated session-memory self-test ------------------------------------
