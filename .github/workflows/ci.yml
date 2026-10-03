@@ -41,6 +41,10 @@ jobs:
           node-version: 24
           cache: npm
 
+      - name: Agent Notes gate
+        # Zero-dep script, runs before npm ci to fail fast.
+        run: npm run verify:notes
+
       - name: Install dependencies
         run: npm ci
 
