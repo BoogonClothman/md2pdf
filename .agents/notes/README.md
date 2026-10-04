@@ -68,6 +68,21 @@
 - 「平凡与否」由 review 判断，**不设自动分类门禁**——机械检查无法可靠判断语义上的
   重大程度。
 
+## 谁写，以及合入权在哪
+
+**责任落在变更，不落在人**：非平凡变更须有 Note，由说得出理由的人撰写。
+本仓库只有一位维护者，故由维护者撰写；需要时用 `npm run note -- <class> <slug>`
+生成合规骨架（脚手架只摆骨架，**不判断变更是否非平凡**，那是 review 的事）。
+
+- **本仓库不接受外部 PR**（见 [CONTRIBUTING.md](../../.github/CONTRIBUTING.md)），
+  因此不为外部贡献者设计 Note 撰写权或准入规则。**权限属于 PR 准入轨道，不属于
+  决策记录**：全文件格式不含作者字段，署名以 git 历史为准，不设 `Author:` 行。
+  （上游 dsh 同此设计：455 份 implemented Note 皆无署名，权限由其
+  `review-ownership/approval-policy.json` 单独承担。）
+- 该姿态带**回退条件**，写在
+  [PR 模板与贡献准入策略](implemented/process/2026-10-04-pr-template-and-contribution-policy.md)：
+  出现持续高质量的外部贡献者，或决定引入 i18n / 第二位维护者时重新评估。
+
 ## 文件格式
 
 格式由 `npm run verify:notes`（[`scripts/verify-agent-notes.mjs`](../../scripts/verify-agent-notes.mjs)，
