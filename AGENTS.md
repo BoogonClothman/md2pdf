@@ -13,6 +13,7 @@ npm run dev             # 构建并启动应用
 npm run typecheck       # tsc --noEmit
 npm run verify:notes    # Agent Notes 门禁（结构 / 格式 / 链接）
 npm run verify          # 11 项运行时验证（PDF / 截图 / 退出路径 / 安全守卫）
+npm run note -- <class> <slug>   # 新建符合门禁骨架的 Agent Note
 ```
 
 ## Agent Notes —— 常设要求
@@ -30,6 +31,23 @@ npm run verify          # 11 项运行时验证（PDF / 截图 / 退出路径 / 
   流水线复用同一检查）。
 - **发行文档与 Agent Note 互不替代**：`docs/releases/` 面向用户描述"发了什么"，
   Agent Note 面向维护者记录"为什么这样决定、否决了什么"。
+
+## 贡献入口 —— 封闭 PR，开放 Issue
+
+**本仓库不接受外部 PR**：合入权只在维护者手里，所有外部输入走 Issue
+（姿态、替代路径与语言约定见 [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md)，
+安全漏洞走 [.github/SECURITY.md](.github/SECURITY.md) 的私密报告）。
+理由是 review 成本：Agent Note 的"非平凡"与"取代检查"判断预设维护者的隐性知识，
+Electron 三平台的验证也无法由单个外部贡献者完成。该决策带**回退条件**，
+写在[对应的 Agent Note](.agents/notes/implemented/process/2026-10-04-pr-template-and-contribution-policy.md)里。
+
+## PR 约定
+
+- 正文按 [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md) 填写，
+  只写 CI 之外的自测证据——CI 三平台做了什么无需复述，
+  「未验证范围」必须写清（这是 review 的第一入口）。
+- 标题用 `type(scope): 摘要`，type 取 feat / fix / refactor / docs / ci / release；
+  标题会成为 merge commit 的 subject。
 
 ## 变更纪律
 
