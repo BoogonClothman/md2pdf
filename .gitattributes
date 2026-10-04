@@ -1,0 +1,4 @@
+# 统一行尾为 LF：Windows 检出默认会把文本文件转成 CRLF，
+# 而门禁与文档格式校验按行逐字比较（见 scripts/verify-agent-notes.mjs 的 toLF）。
+# 门禁本身已做归一化，这里再从检出侧堵住，避免 diff 噪音与未来的格式误报。
+* text=auto eol=lf

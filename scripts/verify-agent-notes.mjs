@@ -117,11 +117,16 @@ for (const lifecycle of [...LIFECYCLES, ARCHIVE]) {
 // 2. 文件格式
 // ---------------------------------------------------------------------------
 
+/** 统一行尾为 LF：Windows 检出（无 .gitattributes 时为 CRLF）不得影响判定，
+ * 否则空行会变成 "\r"、`## 问题` 会变成 "## 问题\r"，逐字校验全部落空
+ * （2026-10-04 由 Windows CI 首次暴露，见同日期 bug-fix Note）。 */
+const toLF = (text) => text.replace(/\r\n?/g, '\n');
+
 /** 去掉代码围栏后的行：围栏内的示例不是文档结构。 */
 function proseLines(text) {
   const out = [];
   let inFence = false;
-  for (const line of text.split('\n')) {
+  for (const line of toLF(text).split('\n')) {
     if (line.startsWith('```')) {
       inFence = !inFence;
       continue;
@@ -134,7 +139,7 @@ function proseLines(text) {
 for (const note of notes) {
   const { lifecycle, rel, abs } = note;
   const failFmt = (msg) => fail('format', rel, msg);
-  const lines = readFileSync(abs, 'utf8').split('\n');
+  const lines = toLF(readFileSync(abs, 'utf8')).split('\n');
   const prose = proseLines(lines.join('\n'));
 
   // 头部块：前 4 行严格（机器 token 保持英文，见 README § 文件格式）
