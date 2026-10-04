@@ -68,7 +68,8 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true
+      "createDesktopShortcut": true,
+      "uninstallDisplayName": "${productName}"
     },
     "mac": {
       "target": [
