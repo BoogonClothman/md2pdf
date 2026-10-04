@@ -20,10 +20,17 @@ npm run dev        # 构建并在桌面启动（WSLg 下窗口直接出现在 Wi
 npm run typecheck  # tsc --noEmit
 npm run verify:notes  # Agent Notes 机制门禁（结构/格式/链接）
 npm run verify     # 11 项自动化验证（PDF/截图/几何断言/退出路径/安全守卫）
+npm run note -- <class> <slug>  # 新建符合门禁骨架的 Agent Note
 ```
 
 开发约定与 [Agent Notes](.agents/notes/README.md)（决策留痕机制）见
 [AGENTS.md](AGENTS.md)。
+
+## 贡献
+
+**本仓库不接受外部 PR**，但欢迎报告问题与提建议——见
+[.github/CONTRIBUTING.md](.github/CONTRIBUTING.md)；安全漏洞请走
+[私密报告](.github/SECURITY.md)。
 
 ## 打包
 
