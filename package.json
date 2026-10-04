@@ -1,6 +1,6 @@
 {
   "name": "md2pdf",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Markdown to PDF converter - cross-platform desktop GUI app (Windows / macOS / Linux)",
   "main": "dist/main/main.js",
   "license": "MIT",
@@ -68,7 +68,8 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true
+      "createDesktopShortcut": true,
+      "uninstallDisplayName": "${productName}"
     },
     "mac": {
       "target": [

@@ -78,7 +78,7 @@ function buildMenu(): void {
             dialog.showMessageBox({
               type: 'info',
               title: 'About md2pdf',
-              message: 'md2pdf v0.1.0',
+              message: `md2pdf v${app.getVersion()}`,
               detail: 'Markdown → PDF converter.\nChromium print pipeline (KaTeX math, Mermaid diagrams, syntax highlighting).',
             });
           },
