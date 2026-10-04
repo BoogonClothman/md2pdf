@@ -1,0 +1,75 @@
+name: 问题报告
+description: 报告 bug 或非预期行为（PDF 导出、渲染、编辑器、打包产物）
+title: "[bug] "
+# 不预设 labels：标签由维护者按需打，避免依赖仓库里未必存在的标签。
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢报告问题。**最小复现的 `.md` 文件是最有价值的一项信息**——多数导出问题
+        （分页、公式、Mermaid、代码高亮、字体）都能被一个几十行的 Markdown 精确复现。
+
+        安全漏洞请勿在此报告，见
+        [SECURITY.md](https://github.com/BoogonClothman/md2pdf/blob/main/.github/SECURITY.md)。
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 问题描述
+      description: 发生了什么？期望结果与实际结果分别是什么？
+      placeholder: |
+        期望：公式块在第一页内完整显示
+        实际：公式被分页截断，上下两半分别落在两页
+    validations:
+      required: true
+
+  - type: textarea
+    id: minimal-md
+    attributes:
+      label: 最小复现 Markdown
+      description: 直接粘贴能触发问题的 Markdown 原文（越短越好）。
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro-steps
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. 打开应用，Help → Load Sample Document 之前先清空
+        2. 粘贴上面的 Markdown
+        3. File → Export PDF
+        4. 观察第 1 页底部
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: 操作系统
+      options:
+        - Windows
+        - macOS (Intel)
+        - macOS (Apple Silicon)
+        - Linux
+        - WSL / WSLg
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: 应用版本
+      description: 安装包文件名里带版本号（如 `md2pdf-0.1.0-linux-x86_64.AppImage`），也可从「关于」查看。
+      placeholder: "0.1.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: extras
+    attributes:
+      label: 补充信息（可选）
+      description: 截图、导出的 PDF、应用日志，或任何其他线索。大文件请用网盘链接。
+    validations:
+      required: false

@@ -1,0 +1,2 @@
+# 关闭空白 Issue：所有报告必须走下方模板，保证"最小复现 / 使用场景"等关键信息不被漏掉。
+blank_issues_enabled: false

@@ -1,0 +1,37 @@
+name: 功能建议
+description: 提出新能力或改进建议
+title: "[feature] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢建议。本仓库不接受外部 PR
+        （见 [CONTRIBUTING.md](https://github.com/BoogonClothman/md2pdf/blob/main/.github/CONTRIBUTING.md)），
+        但**希望先听到你的使用场景**：被采纳的议题由维护者实现，并在 PR 内附 Agent Note 记录决策依据。
+
+        请重点说明"要解决什么问题"，而不只是"想加什么按钮"——后者往往是前者的某种解法，
+        而解法可能不是最合适的那个。
+
+  - type: textarea
+    id: scenario
+    attributes:
+      label: 使用场景与动机
+      description: 你在做什么任务时遇到了障碍？现在的替代做法是什么？
+    validations:
+      required: true
+
+  - type: textarea
+    id: expectation
+    attributes:
+      label: 期望的结果
+      description: 如果有明确的可观察标准（例如"导出时能保留自定义 CSS"），请写出来。
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 你试过的替代方案（可选）
+      description: 别的工具怎么做、你为什么不用它们，对判断优先级很有帮助。
+    validations:
+      required: false
