@@ -2,8 +2,9 @@
 
 import './styles.css';
 import './doc.css';
-import { renderInto } from './render';
+import { renderInto, setMermaidTheme } from './render';
 import { highlightMarkdown } from './highlight-markdown';
+import { DEFAULT_THEME, isThemeId } from '../shared/themes';
 import type { PdfOptions } from '../shared/types';
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
@@ -73,6 +74,7 @@ interface StoredSettings {
   marginMm?: number;
   pageNumbers?: boolean;
   bookmarks?: boolean;
+  theme?: string;
 }
 
 function readJson<T>(key: string): T | null {
@@ -128,6 +130,19 @@ function restoreSettings(): void {
   if (typeof s.bookmarks === 'boolean') {
     $<HTMLInputElement>('opt-bookmarks').checked = s.bookmarks;
   }
+  if (isThemeId(s.theme)) applyTheme(s.theme);
+}
+
+// ---- document render theme ------------------------------------------------
+// Theme id drives three things: the data-theme attribute (doc.css token
+// blocks), the mermaid diagram theme (JS state, see render.ts) and - on
+// export - the PDF footer color (main process, shared/themes.ts).
+let currentTheme = DEFAULT_THEME;
+
+function applyTheme(id: string): void {
+  currentTheme = id;
+  document.documentElement.dataset.theme = id;
+  setMermaidTheme(id);
 }
 
 // ---- state ----------------------------------------------------------------
@@ -234,6 +249,7 @@ function readPdfOptions(): PdfOptions {
     marginMm: Math.max(0, Math.min(50, Number($<HTMLInputElement>('opt-margin').value) || 0)),
     pageNumbers: $<HTMLInputElement>('opt-pagenums').checked,
     bookmarks: $<HTMLInputElement>('opt-bookmarks').checked,
+    theme: currentTheme,
   };
 }
 
@@ -424,6 +440,9 @@ if (isFirstRun) {
   currentPath = typeof storedSession.path === 'string' ? storedSession.path : null;
 }
 restoreSettings();
+// restoreSettings() may have overridden the theme; the attribute must exist
+// before the first render even when no stored setting was present.
+document.documentElement.dataset.theme = currentTheme;
 updateStats();
 refreshHighlight(); // paint tokens before the first preview render
 // Sync main-process dirty flag + window title (setDirty no-ops when false).

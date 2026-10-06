@@ -14,6 +14,7 @@ import { exportToPdf } from './export';
 import { applyPlatformSwitches } from './switches';
 import { applySecurityPolicy } from './security';
 import type { PdfOptions } from '../shared/types';
+import { DEFAULT_THEME } from '../shared/themes';
 
 applyPlatformSwitches(); // must run before app.whenReady()
 applySecurityPolicy(path.join(__dirname, '../renderer'));
@@ -65,6 +66,7 @@ const PDF_OPTS: PdfOptions = {
   marginMm: 20,
   pageNumbers: true,
   bookmarks: true,
+  theme: DEFAULT_THEME,
 };
 
 // Keep the process alive after the hidden export window is destroyed

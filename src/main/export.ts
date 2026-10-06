@@ -10,6 +10,7 @@
 import { BrowserWindow, dialog, ipcMain } from 'electron';
 import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { themeById } from '../shared/themes';
 import type { ExportRequest, ExportResult } from '../shared/types';
 
 const MM_TO_INCH = 1 / 25.4;
@@ -24,9 +25,12 @@ const PAGE_SIZES = {
 } as const;
 
 const EMPTY_HEADER = '<span></span>';
-const PAGE_NUMBER_FOOTER =
-  '<div style="font-size:8px;width:100%;text-align:center;color:#666;">' +
-  '<span class="pageNumber"></span> / <span class="totalPages"></span></div>';
+// The footer template is rendered in its own HTML context: it cannot inherit
+// the page's CSS variables, so the color must be baked in per theme.
+const pageNumberFooter = (themeId: string): string =>
+  '<div style="font-size:8px;width:100%;text-align:center;color:' +
+  themeById(themeId).footerColor +
+  '"><span class="pageNumber"></span> / <span class="totalPages"></span></div>';
 
 export async function exportToPdf(
   req: ExportRequest,
@@ -101,6 +105,7 @@ export async function exportToPdf(
       markdown: req.markdown,
       title: req.suggestedName.replace(/\.pdf$/i, ''),
       baseDir: req.baseDir,
+      theme: req.options.theme,
     });
     await donePromise;
     await load;
@@ -120,7 +125,7 @@ export async function exportToPdf(
       },
       displayHeaderFooter: req.options.pageNumbers,
       ...(req.options.pageNumbers
-        ? { headerTemplate: EMPTY_HEADER, footerTemplate: PAGE_NUMBER_FOOTER }
+        ? { headerTemplate: EMPTY_HEADER, footerTemplate: pageNumberFooter(req.options.theme) }
         : {}),
       generateDocumentOutline: req.options.bookmarks,
     });
