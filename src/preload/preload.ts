@@ -1,7 +1,7 @@
 // Preload bridge: the only API surface exposed to renderer pages.
 
 import { contextBridge, ipcRenderer, webUtils } from 'electron';
-import type { ExportRequest, Md2PdfApi, OpenFileResult, SaveResult, ExportResult } from '../shared/types';
+import type { ExportPayload, ExportRequest, Md2PdfApi, OpenFileResult, SaveResult, ExportResult } from '../shared/types';
 
 const api: Md2PdfApi = {
   platform: process.platform,
@@ -29,7 +29,7 @@ const api: Md2PdfApi = {
   },
 
   // ---- export page only --------------------------------------------------
-  onExportPayload: (cb: (payload: { markdown: string; title: string; baseDir?: string }) => void): void => {
+  onExportPayload: (cb: (payload: ExportPayload) => void): void => {
     ipcRenderer.on('export-payload', (_e, payload) => cb(payload));
   },
   signalExportReady: (): void => {

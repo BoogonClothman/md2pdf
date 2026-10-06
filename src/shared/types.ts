@@ -9,6 +9,17 @@ export interface PdfOptions {
   pageNumbers: boolean;
   /** Generate PDF bookmarks from headings. */
   bookmarks: boolean;
+  /** Document render theme id (see shared/themes.ts THEMES whitelist). */
+  theme: string;
+}
+
+/** Payload main sends to the hidden export page (rendered before printToPDF). */
+export interface ExportPayload {
+  markdown: string;
+  title: string;
+  baseDir?: string;
+  /** Theme id applied as data-theme before rendering (preview = PDF). */
+  theme: string;
 }
 
 export interface ExportRequest {
@@ -51,7 +62,7 @@ export interface Md2PdfApi {
   getPathForFile(file: File): string;
   onMenu(cb: (action: string) => void): void;
   /** Export page only: */
-  onExportPayload(cb: (payload: { markdown: string; title: string; baseDir?: string }) => void): void;
+  onExportPayload(cb: (payload: ExportPayload) => void): void;
   signalExportReady(): void;
   signalExportDone(): void;
 }

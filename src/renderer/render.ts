@@ -3,12 +3,25 @@
 import DOMPurify from 'dompurify';
 import mermaid from 'mermaid';
 import { renderMarkdown } from '../shared/markdown';
+import { DEFAULT_THEME, themeById } from '../shared/themes';
 
-mermaid.initialize({
-  startOnLoad: false,
-  securityLevel: 'loose',
-  theme: 'default',
-});
+// Mermaid config is JS state, not CSS: the diagram theme can only be set by
+// re-calling initialize(). Callers (theme switch / export payload) invoke
+// setMermaidTheme() BEFORE rendering; initialize() is idempotent per theme.
+let appliedMermaidTheme = '';
+
+export function setMermaidTheme(themeId: string): void {
+  const theme = themeById(themeId);
+  if (theme.id === appliedMermaidTheme) return;
+  appliedMermaidTheme = theme.id;
+  mermaid.initialize({
+    startOnLoad: false,
+    securityLevel: 'loose',
+    theme: theme.mermaidTheme,
+  });
+}
+
+setMermaidTheme(DEFAULT_THEME);
 
 // DOMPurify config: keep KaTeX's MathML annotations.
 const PURIFY_OPTS = {

@@ -160,7 +160,9 @@ body {
   flex: 1 1 50%;
   min-width: 0;
   overflow: auto;
-  background: #ffffff;
+  /* Document page background (theme token, doc.css): the preview paper must
+     follow the document theme; the editor pane stays light for now. */
+  background: var(--doc-bg);
   border-left: 1px solid #d1d9e0;
 }
 

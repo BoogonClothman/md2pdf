@@ -1,5 +1,16 @@
 /* Document content styles: used by BOTH the preview pane and the PDF export
-   page (which also applies @media print rules). */
+   page (which also applies @media print rules).
+
+   Theme token layering (see .agents/notes/proposed/feature/2026-10-06-
+   document-render-themes.md):
+     :root                          - light tokens (also colors the EDITOR
+                                      overlay, which lives outside .doc and
+                                      must stay light for now);
+     html[data-theme='x']           - page-level tokens only (--doc-bg):
+                                      preview paper + print canvas;
+     html[data-theme='x'] .doc      - content tokens, scoped to the article.
+   Never move --hljs-* overrides to the html level: the editor highlight
+   overlay would pick them up. */
 
 :root {
   --doc-text: #24292f;
@@ -9,11 +20,85 @@
   --doc-accent: #0969da;
   --doc-code-bg: #f6f8fa;
   --doc-blockquote: #57606a;
+  --doc-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial,
+    sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+
+  /* highlight.js tokens (GitHub-ish light palette) */
+  --hljs-comment: #6e7781;
+  --hljs-keyword: #cf222e;
+  --hljs-string: #0a3069;
+  --hljs-number: #0550ae;
+  --hljs-title: #8250df;
+  --hljs-attr: #953800;
+  --hljs-built_in: #0550ae;
+  --hljs-meta: #57606a;
+  --hljs-deletion: #82071e;
+}
+
+/* ---- Theme blocks (ids must match shared/themes.ts THEMES) -------------
+   github-light needs no block: :root above IS github-light. */
+
+/* Page-level token only: preview paper + print canvas. */
+html[data-theme='github-dark'] {
+  --doc-bg: #0d1117;
+}
+html[data-theme='github-dark'] .doc {
+  color-scheme: dark; /* native checkboxes/selection follow the dark paper */
+  --doc-text: #e6edf3;
+  --doc-muted: #8b949e;
+  --doc-border: #30363d;
+  --doc-accent: #58a6ff;
+  --doc-code-bg: #161b22;
+  --doc-blockquote: #8b949e;
+  --hljs-comment: #8b949e;
+  --hljs-keyword: #ff7b72;
+  --hljs-string: #a5d6ff;
+  --hljs-number: #79c0ff;
+  --hljs-title: #d2a8ff;
+  --hljs-attr: #ffa657;
+  --hljs-built_in: #79c0ff;
+  --hljs-meta: #8b949e;
+  --hljs-deletion: #ffa198;
+}
+
+html[data-theme='serif-print'] .doc {
+  /* System serif stacks incl. CJK: no bundled fonts (install size). */
+  --doc-font: Georgia, 'Times New Roman', 'Songti SC', SimSun, 'Noto Serif CJK SC',
+    'Source Han Serif SC', serif;
+  --doc-text: #1a1a1a;
+  --doc-muted: #4d4d4d;
+  --doc-border: #cccccc;
+  --doc-accent: #0645ad;
+  --doc-code-bg: #f4f4f4;
+  --doc-blockquote: #4d4d4d;
+  /* hljs inherits the light palette: it is print-safe on white and the
+     theme's identity is typography, not code colors. */
+}
+
+html[data-theme='vscode-dark'] {
+  --doc-bg: #1e1e1e;
+}
+html[data-theme='vscode-dark'] .doc {
+  color-scheme: dark;
+  --doc-text: #d4d4d4;
+  --doc-muted: #9d9d9d;
+  --doc-border: #3c3c3c;
+  --doc-accent: #569cd6;
+  --doc-code-bg: #252526;
+  --doc-blockquote: #9d9d9d;
+  --hljs-comment: #6a9955;
+  --hljs-keyword: #569cd6;
+  --hljs-string: #ce9178;
+  --hljs-number: #b5cea8;
+  --hljs-title: #dcdcaa;
+  --hljs-attr: #9cdcfe;
+  --hljs-built_in: #4ec9b0;
+  --hljs-meta: #c586c0;
+  --hljs-deletion: #f14c4c;
 }
 
 .doc {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial,
-    sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--doc-font);
   font-size: 15px;
   line-height: 1.7;
   color: var(--doc-text);
@@ -102,7 +187,7 @@
   background: var(--doc-code-bg);
   font-weight: 600;
 }
-.doc tr:nth-child(2n) { background: #f6f8fa; }
+.doc tr:nth-child(2n) { background: var(--doc-code-bg); }
 
 .doc img { max-width: 100%; }
 
@@ -135,16 +220,16 @@
   height: auto;
 }
 
-/* ---- highlight.js tokens (GitHub-ish light theme) ---- */
-.hljs-comment, .hljs-quote { color: #6e7781; font-style: italic; }
-.hljs-keyword, .hljs-selector-tag, .hljs-template-tag { color: #cf222e; }
-.hljs-string, .hljs-regexp, .hljs-addition { color: #0a3069; }
-.hljs-number, .hljs-literal, .hljs-symbol, .hljs-bullet { color: #0550ae; }
-.hljs-title, .hljs-section, .hljs-name, .hljs-function { color: #8250df; }
-.hljs-attr, .hljs-attribute, .hljs-variable, .hljs-template-variable { color: #953800; }
-.hljs-built_in, .hljs-type { color: #0550ae; }
-.hljs-meta { color: #57606a; }
-.hljs-deletion { color: #82071e; }
+/* ---- highlight.js tokens (colors are theme tokens: see :root above) ---- */
+.hljs-comment, .hljs-quote { color: var(--hljs-comment); font-style: italic; }
+.hljs-keyword, .hljs-selector-tag, .hljs-template-tag { color: var(--hljs-keyword); }
+.hljs-string, .hljs-regexp, .hljs-addition { color: var(--hljs-string); }
+.hljs-number, .hljs-literal, .hljs-symbol, .hljs-bullet { color: var(--hljs-number); }
+.hljs-title, .hljs-section, .hljs-name, .hljs-function { color: var(--hljs-title); }
+.hljs-attr, .hljs-attribute, .hljs-variable, .hljs-template-variable { color: var(--hljs-attr); }
+.hljs-built_in, .hljs-type { color: var(--hljs-built_in); }
+.hljs-meta { color: var(--hljs-meta); }
+.hljs-deletion { color: var(--hljs-deletion); }
 
 /* Markdown-source tokens: produced when highlighting .md source (the editor
    overlay) or a ```markdown fence in the rendered output. */
@@ -160,7 +245,7 @@
 
 @media print {
   html, body {
-    background: #fff;
+    background: var(--doc-bg);
     margin: 0;
     padding: 0;
   }
