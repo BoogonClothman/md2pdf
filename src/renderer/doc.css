@@ -35,6 +35,68 @@
   --hljs-deletion: #82071e;
 }
 
+/* ---- Theme blocks (ids must match shared/themes.ts THEMES) -------------
+   github-light needs no block: :root above IS github-light. */
+
+/* Page-level token only: preview paper + print canvas. */
+html[data-theme='github-dark'] {
+  --doc-bg: #0d1117;
+}
+html[data-theme='github-dark'] .doc {
+  color-scheme: dark; /* native checkboxes/selection follow the dark paper */
+  --doc-text: #e6edf3;
+  --doc-muted: #8b949e;
+  --doc-border: #30363d;
+  --doc-accent: #58a6ff;
+  --doc-code-bg: #161b22;
+  --doc-blockquote: #8b949e;
+  --hljs-comment: #8b949e;
+  --hljs-keyword: #ff7b72;
+  --hljs-string: #a5d6ff;
+  --hljs-number: #79c0ff;
+  --hljs-title: #d2a8ff;
+  --hljs-attr: #ffa657;
+  --hljs-built_in: #79c0ff;
+  --hljs-meta: #8b949e;
+  --hljs-deletion: #ffa198;
+}
+
+html[data-theme='serif-print'] .doc {
+  /* System serif stacks incl. CJK: no bundled fonts (install size). */
+  --doc-font: Georgia, 'Times New Roman', 'Songti SC', SimSun, 'Noto Serif CJK SC',
+    'Source Han Serif SC', serif;
+  --doc-text: #1a1a1a;
+  --doc-muted: #4d4d4d;
+  --doc-border: #cccccc;
+  --doc-accent: #0645ad;
+  --doc-code-bg: #f4f4f4;
+  --doc-blockquote: #4d4d4d;
+  /* hljs inherits the light palette: it is print-safe on white and the
+     theme's identity is typography, not code colors. */
+}
+
+html[data-theme='vscode-dark'] {
+  --doc-bg: #1e1e1e;
+}
+html[data-theme='vscode-dark'] .doc {
+  color-scheme: dark;
+  --doc-text: #d4d4d4;
+  --doc-muted: #9d9d9d;
+  --doc-border: #3c3c3c;
+  --doc-accent: #569cd6;
+  --doc-code-bg: #252526;
+  --doc-blockquote: #9d9d9d;
+  --hljs-comment: #6a9955;
+  --hljs-keyword: #569cd6;
+  --hljs-string: #ce9178;
+  --hljs-number: #b5cea8;
+  --hljs-title: #dcdcaa;
+  --hljs-attr: #9cdcfe;
+  --hljs-built_in: #4ec9b0;
+  --hljs-meta: #c586c0;
+  --hljs-deletion: #f14c4c;
+}
+
 .doc {
   font-family: var(--doc-font);
   font-size: 15px;

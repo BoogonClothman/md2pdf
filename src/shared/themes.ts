@@ -25,9 +25,15 @@ export interface ThemeDef {
   footerColor: string;
 }
 
-/** Whitelist of shipped themes. First entry is the default. */
+/** Whitelist of shipped themes. First entry is the default.
+ *  Ids must match the `html[data-theme='...']` blocks in renderer/doc.css;
+ *  mermaidTheme/footerColor exist because mermaid config and the PDF footer
+ *  template are JS-side state that CSS variables cannot reach. */
 export const THEMES: readonly ThemeDef[] = [
   { id: 'github-light', label: 'GitHub Light', mermaidTheme: 'default', footerColor: '#666' },
+  { id: 'github-dark', label: 'GitHub Dark', mermaidTheme: 'dark', footerColor: '#8b949e' },
+  { id: 'serif-print', label: 'Serif Print', mermaidTheme: 'neutral', footerColor: '#555555' },
+  { id: 'vscode-dark', label: 'VS Code Dark+', mermaidTheme: 'dark', footerColor: '#8a8a8a' },
 ];
 
 export const DEFAULT_THEME: string = THEMES[0].id;

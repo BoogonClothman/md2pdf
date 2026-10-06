@@ -101,6 +101,29 @@ async function main(): Promise<void> {
     ok = await check(head === '%PDF-', `PDF magic bytes (${head})`) && ok;
   }
 
+  // ---- 1b. Dark-theme export (payload theme -> export page -> footer) -----
+  // Exercises the full dark chain: data-theme on the export page, mermaid
+  // re-init, printBackground with a dark canvas, per-theme footer color.
+  const darkPdfPath = path.join(OUT_DIR, 'verify-output-dark.pdf');
+  const darkResult = await exportToPdf(
+    {
+      markdown: SAMPLE,
+      options: { ...PDF_OPTS, theme: 'github-dark' },
+      suggestedName: darkPdfPath,
+    },
+    null,
+  );
+  ok = await check(
+    !darkResult.error,
+    `dark-theme export completes without error${darkResult.error ? ` (${darkResult.error})` : ''}`,
+  ) && ok;
+  if (!darkResult.error) {
+    const st = await stat(darkPdfPath);
+    ok = await check(st.size > 5_000, `dark PDF non-trivial size (${st.size} bytes)`) && ok;
+    const head = (await readFile(darkPdfPath)).subarray(0, 5).toString('latin1');
+    ok = await check(head === '%PDF-', `dark PDF magic bytes (${head})`) && ok;
+  }
+
   // ---- 2. GUI smoke test (real main window + screenshot) -----------------
   const win = new BrowserWindow({
     width: 1280,
@@ -129,6 +152,44 @@ async function main(): Promise<void> {
     `document.getElementById('preview').children.length > 0`,
   );
   ok = await check(hasPreview === true, 'live preview rendered content') && ok;
+
+  // ---- 2b. Theme switch (dropdown -> data-theme -> computed colors) -------
+  const themeSwitch = await win.webContents.executeJavaScript(`(async () => {
+    const sel = document.getElementById('opt-theme');
+    const options = Array.from(sel.options).map(o => o.value);
+    const before = getComputedStyle(document.getElementById('preview')).color;
+    sel.value = 'github-dark';
+    sel.dispatchEvent(new Event('change'));
+    await new Promise(r => setTimeout(r, 300)); // applyTheme is sync; settle layout
+    const after = getComputedStyle(document.getElementById('preview')).color;
+    const editorBg = getComputedStyle(document.getElementById('editor-wrap')).backgroundColor;
+    return {
+      options,
+      themeAttr: document.documentElement.dataset.theme,
+      before, after,
+      editorBg,
+      stored: JSON.parse(localStorage.getItem('md2pdf.settings') || '{}').theme ?? null,
+    };
+  })()`);
+  ok = await check(
+    themeSwitch.options.length >= 4 &&
+      themeSwitch.options[0] === 'github-light' &&
+      themeSwitch.themeAttr === 'github-dark',
+    `theme dropdown populated + data-theme applied (options=${JSON.stringify(themeSwitch.options)}, attr=${themeSwitch.themeAttr})`,
+  ) && ok;
+  ok = await check(
+    themeSwitch.before !== themeSwitch.after &&
+      themeSwitch.after === 'rgb(230, 237, 243)',
+    `preview follows theme (before=${themeSwitch.before}, after=${themeSwitch.after})`,
+  ) && ok;
+  ok = await check(
+    themeSwitch.editorBg === 'rgb(255, 255, 255)',
+    `editor pane stays light under dark theme (${themeSwitch.editorBg})`,
+  ) && ok;
+  ok = await check(
+    themeSwitch.stored === 'github-dark',
+    `theme persisted to settings (${themeSwitch.stored})`,
+  ) && ok;
 
   // ---- 3. KaTeX superscript geometry (regression: katex 0.6 CSS mismatch) --
   const sup = await win.webContents.executeJavaScript(`(() => {

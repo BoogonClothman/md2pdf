@@ -4,7 +4,7 @@ import './styles.css';
 import './doc.css';
 import { renderInto, setMermaidTheme } from './render';
 import { highlightMarkdown } from './highlight-markdown';
-import { DEFAULT_THEME, isThemeId } from '../shared/themes';
+import { DEFAULT_THEME, THEMES, isThemeId } from '../shared/themes';
 import type { PdfOptions } from '../shared/types';
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
@@ -21,6 +21,7 @@ const statusMsg = $<HTMLElement>('status-msg');
 const statusFile = $<HTMLElement>('status-file');
 const statusStats = $<HTMLElement>('status-stats');
 const dropOverlay = $<HTMLElement>('drop-overlay');
+const themeSelect = $<HTMLSelectElement>('opt-theme');
 
 const DEFAULT_DOC = `# md2pdf
 
@@ -130,7 +131,9 @@ function restoreSettings(): void {
   if (typeof s.bookmarks === 'boolean') {
     $<HTMLInputElement>('opt-bookmarks').checked = s.bookmarks;
   }
-  if (isThemeId(s.theme)) applyTheme(s.theme);
+  // Theme: select is populated before restoreSettings() runs; invalid ids
+  // (downgrade / hand-edited storage) keep the default selection.
+  if (isThemeId(s.theme)) themeSelect.value = s.theme;
 }
 
 // ---- document render theme ------------------------------------------------
@@ -318,6 +321,17 @@ for (const id of ['opt-pagesize', 'opt-orientation', 'opt-margin', 'opt-pagenums
   $(id).addEventListener('change', persistSettings);
 }
 
+// Theme options come from the shared registry (single source of truth, keeps
+// the dropdown from drifting from shared/themes.ts and doc.css blocks).
+for (const t of THEMES) themeSelect.add(new Option(t.label, t.id));
+themeSelect.addEventListener('change', () => {
+  applyTheme(themeSelect.value);
+  persistSettings();
+  // Mermaid bakes colors into its SVG at render time - CSS tokens update
+  // live, but diagrams need a re-render to follow the new theme.
+  scheduleRender();
+});
+
 // ---- editor ----------------------------------------------------------------
 // Syntax highlighting for the markdown source: the textarea's text is
 // transparent and #editor-highlight (a <pre> stacked behind it, see
@@ -440,9 +454,9 @@ if (isFirstRun) {
   currentPath = typeof storedSession.path === 'string' ? storedSession.path : null;
 }
 restoreSettings();
-// restoreSettings() may have overridden the theme; the attribute must exist
-// before the first render even when no stored setting was present.
-document.documentElement.dataset.theme = currentTheme;
+// Apply the selected theme (select defaults to DEFAULT_THEME when nothing
+// was stored) before the first render.
+applyTheme(themeSelect.value);
 updateStats();
 refreshHighlight(); // paint tokens before the first preview render
 // Sync main-process dirty flag + window title (setDirty no-ops when false).
